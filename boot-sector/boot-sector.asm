@@ -5,19 +5,19 @@ mov bx, WELCOME
 call print
 call print_nl
 
+mov bp, 0x8000 ; set the stack far from us
+mov sp, bp
 
-mov bx, GOODBYE
-call print
+mov bx, 0x9000
+mov dh, 2       ; read 2 sectors
 
-call print_nl
-
-mov dx, 0x1234
-call print_hex
+call disk_load
 
 ; Infinite loop (e9 fd ff)
 jmp $
 
 %include "./boot-sector-helpers.asm"
+%include "./boot-sector-disk.asm"
 
 ; data
 WELCOME:
@@ -26,7 +26,10 @@ WELCOME:
 GOODBYE:
     db 'Goodbye!', 0
 
-; fill with 510 zeros minus the size of the previous code (padding)
-; and add magic numbetr
+
+; magic number
 times 510-($-$$) db 0
 dw 0xaa55 
+
+times 256 dw 0xdada ; sector 2 = 512 bytes
+times 256 dw 0xface ; sector 3 = 512 bytes
